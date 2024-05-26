@@ -1,6 +1,10 @@
 # No-Code-AGI
-requirements.txt
+Requirements.txt
+
 fastapi
+
 uvicorn
+
 sqlalchemy
+
 pydantic
