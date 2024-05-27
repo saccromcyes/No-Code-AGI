@@ -1,0 +1,187 @@
+## public/index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenAGI Assistant Builder</title>
+</head>
+<body>
+    <div id="root"></div>
+</body>
+</html>
+## src/index.js
+import React from 'react';
+import ReactDOM from 'react-dom';
+import './index.css';
+import App from './App';
+
+ReactDOM.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+  document.getElementById('root')
+);
+## src/App.js
+import React from 'react';
+import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
+import Home from './components/Home';
+import WorkflowList from './components/WorkflowList';
+import WorkflowDetail from './components/WorkflowDetail';
+import UserList from './components/UserList';
+import UserDetail from './components/UserDetail';
+
+function App() {
+  return (
+    <Router>
+      <div>
+        <Switch>
+          <Route path="/workflows/:workflowId">
+            <WorkflowDetail />
+          </Route>
+          <Route path="/workflows">
+            <WorkflowList />
+          </Route>
+          <Route path="/users/:userId">
+            <UserDetail />
+          </Route>
+          <Route path="/users">
+            <UserList />
+          </Route>
+          <Route path="/">
+            <Home />
+          </Route>
+        </Switch>
+      </div>
+    </Router>
+  );
+}
+
+export default App;
+## src/components/Home.js
+import React from 'react';
+
+function Home() {
+  return (
+    <div>
+      <h2>Welcome to OpenAGI Assistant Builder</h2>
+      <p>Create your own intelligent assistants to simplify tasks and achieve your goals!</p>
+    </div>
+  );
+}
+
+export default Home;
+## src/components/WorkflowList.js
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+
+function WorkflowList() {
+  const [workflows, setWorkflows] = useState([]);
+
+  useEffect(() => {
+    fetch('/workflows')
+      .then(response => response.json())
+      .then(data => setWorkflows(data));
+  }, []);
+
+  return (
+    <div>
+      <h2>Workflows</h2>
+      <ul>
+        {workflows.map(workflow => (
+          <li key={workflow.id}>
+            <Link to={`/workflows/${workflow.id}`}>{workflow.name}</Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export default WorkflowList;
+## src/components/WorkflowDetail.js
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+
+function WorkflowDetail() {
+  const { workflowId } = useParams();
+  const [workflow, setWorkflow] = useState(null);
+
+  useEffect(() => {
+    fetch(`/workflows/${workflowId}`)
+      .then(response => response.json())
+      .then(data => setWorkflow(data));
+  }, [workflowId]);
+
+  if (!workflow) {
+    return <div>Loading...</div>;
+  }
+
+  return (
+    <div>
+      <h2>{workflow.name}</h2>
+      <pre>{JSON.stringify(workflow.components, null, 2)}</pre>
+    </div>
+  );
+}
+
+export default WorkflowDetail;
+## src/components/UserList.js
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+
+function UserList() {
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    fetch('/users')
+      .then(response => response.json())
+      .then(data => setUsers(data));
+  }, []);
+
+  return (
+    <div>
+      <h2>Users</h2>
+      <ul>
+        {users.map(user => (
+          <li key={user.id}>
+            <Link to={`/users/${user.id}`}>{user.username}</Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export default UserList;
+## src/components/UserDetail.js
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+
+function UserDetail() {
+  const { userId } = useParams();
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    fetch(`/users/${userId}`)
+      .then(response => response.json())
+      .then(data => setUser(data));
+  }, [userId]);
+
+  if (!user) {
+    return <div>Loading...</div>;
+  }
+
+  return (
+    <div>
+      <h2>{user.username}</h2>
+      <p>Email: {user.email}</p>
+    </div>
+  );
+}
+
+export default UserDetail;
+
+
+
+
