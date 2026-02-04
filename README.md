@@ -93,4 +93,4 @@ You can set an API base URL in Docker with the `API_BASE_URL` environment variab
 ## Demo Data
 
 Use the **Seed Demo Data** button in the UI to instantly add a standout builder profile and
-workflow. This is perfect for presenting the product quickly in interviews or demos.
+workflow.
