@@ -1,38 +1,96 @@
-# No-Code-AGI                                                   
-Requirements.txt
+# No-Code-AGI (OpenAGI Assistant Builder)
 
-fastapi uvicorn sqlalchemy pydantic
+A full-stack, production-ready starter for a no-code AGI workflow builder. The stack includes:
 
-Running the Application
+- **FastAPI + SQLAlchemy backend** for workflows and builders (users).
+- **Static frontend** with a polished UI that talks to the API.
+- **Docker + Docker Compose** for an easy one-command setup.
 
-Backend                                                            
-1 Navigate to the backend directory:
+## Features
+
+- CRUD API for users and workflows, including status tracking.
+- Health check endpoint for monitoring.
+- Metrics and activity feed for operational visibility.
+- Workflow templates for one-click setup.
+- Workflow runs for showcasing orchestration readiness.
+- Typed schemas and validation using Pydantic.
+- Configurable CORS and environment support.
+- Frontend forms for creating users and workflows.
+- Demo data seeding to showcase the product quickly.
+
+## Directory Structure
+
+```
+.
+├── backend
+│   ├── app
+│   │   ├── __init__.py
+│   │   ├── config.py
+│   │   ├── crud.py
+│   │   ├── database.py
+│   │   ├── main.py
+│   │   ├── models.py
+│   │   └── schemas.py
+│   ├── .env.example
+│   ├── Dockerfile
+│   └── requirements.txt
+├── frontend
+│   ├── app.js
+│   ├── config.js
+│   ├── docker-entrypoint.sh
+│   ├── Dockerfile
+│   ├── index.html
+│   ├── nginx.conf
+│   └── styles.css
+└── docker-compose.yml
+```
+
+## Quickstart (Docker)
+
+```bash
+docker compose up --build
+```
+
+- Frontend: http://localhost:3000
+- Backend: http://localhost:8000
+- API docs: http://localhost:8000/docs
+
+## Local Development (without Docker)
+
+### Backend
+
+```bash
 cd backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
 
-2 Build the Docker image:
-docker build -t openagi-backend .
+### Frontend
 
-3 Run the Docker container:
-docker run -d -p 8000:80 openagi-backend
-
-Frontend
-
-1 Navigate to the frontend directory:
+```bash
 cd frontend
+python -m http.server 3000
+```
 
-2 Build the Docker image:
-docker build -t openagi-frontend .
+If you're running the frontend locally, it expects the backend at `http://localhost:8000` by default.
+You can set an API base URL in Docker with the `API_BASE_URL` environment variable.
 
-3 Run the Docker container
-docker run -d -p 3000:80 openagi-frontend
+## API Highlights
 
-Now you should have both the backend and frontend running in Docker containers. The backend will be accessible at http://localhost:8000 and the frontend at http://localhost:3000
+- `GET /health` - service health status
+- `GET /metrics` - uptime and workflow/user counts
+- `GET /activity` - recent activity feed
+- `GET /templates` - curated workflow templates
+- `GET /runs` - recent workflow runs
+- `POST /workflows/{id}/runs` - create a workflow run
+- `GET /users` / `POST /users` - list and create builders
+- `PATCH /users/{id}` / `DELETE /users/{id}` - update or remove a builder
+- `GET /workflows` / `POST /workflows` - list and create workflows
+- `PATCH /workflows/{id}` / `DELETE /workflows/{id}` - update or remove a workflow
 
+## Demo Data
 
-
-
-
-
-
-
-
+Use the **Seed Demo Data** button in the UI to instantly add a standout builder profile and
+workflow. This is perfect for presenting the product quickly in interviews or demos.
