@@ -85,7 +85,15 @@ def main() -> int:
             f"{'✓' if row['passed'] else '✗'} {task['id']:<3} {row['model_turns']} turns {row['tool_calls']} calls  {task['input'][:60]}",
             flush=True,
         )
-        time.sleep(2)  # stay inside free-tier rate limits
+        time.sleep(20)  # Groq free tier: ~8k tokens per minute; agent tasks can use several thousand
+
+    errored = [r["id"] for r in rows if r["status"] == "error"]
+    if len(errored) > 0.1 * len(rows):
+        print(
+            f"FAIL: the model failed on {len(errored)} of {len(rows)} tasks ({', '.join(errored)}); results not published.",
+            file=sys.stderr,
+        )
+        return 1
 
     def share(xs):
         return round(sum(xs) / len(xs), 3) if xs else None

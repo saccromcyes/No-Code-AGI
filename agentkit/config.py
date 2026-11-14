@@ -16,8 +16,10 @@ class Settings(BaseSettings):
     # Any OpenAI-compatible endpoint that supports tool calling (Groq by default).
     llm_base_url: str = "https://api.groq.com/openai/v1"
     llm_api_key: str = ""
-    llm_model: str = "llama-3.3-70b-versatile"
+    llm_model: str = "openai/gpt-oss-120b"
     llm_timeout_s: float = 45.0
+    llm_reasoning_effort: str = "low"  # for reasoning models (gpt-oss); set empty for models without it
+    llm_max_retries: int = 2  # retries with backoff on rate limits and transient errors
 
     database_url: str = f"sqlite:///{ROOT / '.data' / 'agents.db'}"
 
