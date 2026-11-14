@@ -40,6 +40,7 @@ jobs:
           fi
           python -m eval.run_eval
       - name: Commit results
+        if: env.LLM_API_KEY != ''
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
