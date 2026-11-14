@@ -31,6 +31,8 @@
   --ok: #5DD3A6; --err: #FF8C7F; --err-wash: #3D1E1B; --code-bg: #12151B; color-scheme: dark;
 }
 
+/* The hidden attribute must win over any display rule below. */
+[hidden] { display: none !important; }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--canvas); color: var(--ink); font: 400 15px/1.5 var(--sans); }
 a { color: var(--tool); }
