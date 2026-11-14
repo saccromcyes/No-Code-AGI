@@ -81,3 +81,13 @@ def test_every_tool_has_a_valid_schema():
         schema = tool.schema()
         assert schema["function"]["name"] == tool.name
         assert schema["function"]["parameters"]["type"] == "object"
+
+
+def test_model_text_is_tidied():
+    from agentkit.llm import tidy_text
+
+    assert (
+        tidy_text("Canberra is the capital【3†L10-L15】 and has 456 692 people.")
+        == "Canberra is the capital and has 456 692 people."
+    )
+    assert tidy_text(None) is None

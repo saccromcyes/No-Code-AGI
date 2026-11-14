@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from typing import Protocol
 
 from agentkit.config import Settings
@@ -16,6 +17,18 @@ class ChatModel(Protocol):
 
     def chat(self, messages: list[dict], tools: list[dict] | None) -> dict:
         """Return {"content": str | None, "tool_calls": [{"id", "name", "arguments"}], "usage": {...}}."""
+
+
+_SOURCE_MARKER = re.compile(r"\s?【[^】]{0,40}】")
+_PLAIN_CHARS = str.maketrans({"\u202f": " ", "\u00a0": " ", "\u2009": " ", "\u2011": "-"})
+
+
+def tidy_text(text: str | None) -> str | None:
+    """gpt-oss models add source markers like 【3†L10-L15】 from their browsing training and put
+    narrow no-break spaces inside numbers; neither means anything to a reader here."""
+    if not text:
+        return text
+    return _SOURCE_MARKER.sub("", text.translate(_PLAIN_CHARS))
 
 
 def provider_options(base_url: str, reasoning_effort: str) -> dict:
@@ -53,7 +66,7 @@ class OpenAICompatible:
         msg = response.choices[0].message
         usage = response.usage
         return {
-            "content": msg.content,
+            "content": tidy_text(msg.content),
             "tool_calls": [
                 {"id": tc.id, "name": tc.function.name, "arguments": tc.function.arguments or "{}"}
                 for tc in (msg.tool_calls or [])
