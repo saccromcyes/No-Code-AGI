@@ -1,12 +1,12 @@
 # No-Code Agent Builder
 
 [![CI](https://github.com/saccromcyes/No-Code-AGI/actions/workflows/ci.yml/badge.svg)](https://github.com/saccromcyes/No-Code-AGI/actions/workflows/ci.yml)
-[![Live demo](https://img.shields.io/badge/live%20demo-Hugging%20Face-E8A317)](https://huggingface.co/spaces/saccromcyes/agent-builder)
+[![Live demo](https://img.shields.io/badge/live%20demo-Render-E8A317)](https://saccromcyes-agents.onrender.com)
 [![License: MIT](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
 
 Build an AI agent without writing code: give it instructions, switch on the tools it may use, paste in notes it can search. Then run it and **watch every step**: which tool it chose, with what arguments, what came back, and how it got to the answer.
 
-**[Try it →](https://huggingface.co/spaces/saccromcyes/agent-builder)** Start from one of four starter agents, or copy one and change it.
+**[Try it →](https://saccromcyes-agents.onrender.com)** Start from one of four starter agents, or copy one and change it. It runs on a free tier, so if nobody has used it for a while the first visit takes about a minute to wake up.
 
 <!-- Screenshot added after the first deploy: docs/screenshot.png -->
 
@@ -51,7 +51,7 @@ pytest                             # 34 tests with a scripted model, no network 
 python -m eval.run_eval            # live evaluation (needs LLM_API_KEY and internet)
 ```
 
-Deployment to Hugging Face Spaces runs from GitHub Actions after CI passes: set secrets `HF_TOKEN` and `LLM_API_KEY`, and variable `HF_SPACE`.
+**Deployment.** The app runs on Render's free tier (512 MB of memory, a tenth of a CPU core), defined in the [Blueprint](https://github.com/saccromcyes/saccromcyes.github.io/blob/main/render.yaml) that deploys all of my demos; every push to `main` that passes CI redeploys it. The CI job *Fits Render free tier* starts the production image under exactly those limits, sends a real request, and fails if the app runs out of memory or doesn't become healthy, so a change can't silently break the live demo.
 
 ## API
 

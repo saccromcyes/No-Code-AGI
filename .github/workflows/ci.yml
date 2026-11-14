@@ -19,3 +19,19 @@ jobs:
       - run: ruff check .
       - run: ruff format --check .
       - run: pytest
+
+  free-tier:
+    name: Fits Render free tier (512 MB, 0.1 CPU)
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the production image
+        run: docker build -t app .
+      - name: Start it inside the free-tier limits and send a real request
+        run: bash scripts/free_tier_smoke.sh
+        env:
+          HEALTH: '/health'
+          METHOD: 'GET'
+          REQ_PATH: '/api/agents'
+          EXPECT: 'research-assistant'
