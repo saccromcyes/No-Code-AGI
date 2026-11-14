@@ -1,0 +1,8 @@
+fastapi==0.162.2
+uvicorn[standard]==0.54.0
+pydantic==2.14.3
+pydantic-settings==2.16.2
+SQLAlchemy==2.1.8
+rank-bm25==0.2.2
+httpx==0.28.1
+openai==3.46.0

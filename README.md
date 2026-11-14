@@ -1,96 +1,85 @@
-# No-Code-AGI (OpenAGI Assistant Builder)
+# No-Code Agent Builder
 
-A full-stack, production-ready starter for a no-code AGI workflow builder. The stack includes:
+[![CI](https://github.com/saccromcyes/No-Code-AGI/actions/workflows/ci.yml/badge.svg)](https://github.com/saccromcyes/No-Code-AGI/actions/workflows/ci.yml)
+[![Live demo](https://img.shields.io/badge/live%20demo-Render-E8A317)](https://saccromcyes-agents.onrender.com)
+[![License: MIT](https://img.shields.io/badge/license-MIT-lightgrey)](LICENSE)
 
-- **FastAPI + SQLAlchemy backend** for workflows and builders (users).
-- **Static frontend** with a polished UI that talks to the API.
-- **Docker + Docker Compose** for an easy one-command setup.
+Build an AI agent without writing code: give it instructions, switch on the tools it may use, paste in notes it can search. Then run it and **watch every step**: which tool it chose, with what arguments, what came back, and how it got to the answer.
 
-## Features
+**[Try it →](https://saccromcyes-agents.onrender.com)** Start from one of four starter agents, or copy one and change it. It runs on a free tier, so if nobody has used it for a while the first visit takes about a minute to wake up.
 
-- CRUD API for users and workflows, including status tracking.
-- Health check endpoint for monitoring.
-- Metrics and activity feed for operational visibility.
-- Workflow templates for one-click setup.
-- Workflow runs for showcasing orchestration readiness.
-- Typed schemas and validation using Pydantic.
-- Configurable CORS and environment support.
-- Frontend forms for creating users and workflows.
-- Demo data seeding to showcase the product quickly.
+<!-- Screenshot added after the first deploy: docs/screenshot.png -->
 
-## Directory Structure
+## What's inside
 
-```
-.
-├── backend
-│   ├── app
-│   │   ├── __init__.py
-│   │   ├── config.py
-│   │   ├── crud.py
-│   │   ├── database.py
-│   │   ├── main.py
-│   │   ├── models.py
-│   │   └── schemas.py
-│   ├── .env.example
-│   ├── Dockerfile
-│   └── requirements.txt
-├── frontend
-│   ├── app.js
-│   ├── config.js
-│   ├── docker-entrypoint.sh
-│   ├── Dockerfile
-│   ├── index.html
-│   ├── nginx.conf
-│   └── styles.css
-└── docker-compose.yml
-```
+- **A real agent loop.** The model is called with OpenAI-style tool definitions; tool calls run, results go back to the model, and the loop repeats until it answers. Parallel tool calls are supported.
+- **Seven tools**, each with a JSON schema and a plain-language description:
 
-## Quickstart (Docker)
+  | Tool | What it does | Safety |
+  |---|---|---|
+  | Calculator | Exact arithmetic | Parsed with Python's `ast`; only numbers, operators and whitelisted maths functions; no `eval` |
+  | Date maths | Weekdays, adding days, days between dates | Input validated as ISO dates |
+  | Current time | Now, in any IANA time zone | |
+  | Wikipedia search / article | Find and read articles | Official API, identified user agent |
+  | Read a web page | Fetch readable text from a URL | SSRF guard: public http(s) only, private and cloud-metadata addresses blocked on every redirect |
+  | Search my notes | Keyword search over notes the builder attaches | Notes stay with the agent |
+
+- **Guard rails on every run:** a step limit (the last turn withholds tools so the agent must answer), a tool-call budget, per-tool timeouts, truncated tool output, a stop on repeated identical calls, and calls to disabled or unknown tools refused. Tool failures are returned to the model as errors it can recover from, never as crashes.
+- **Prompt-injection defence:** the system prompt marks tool results and notes as data, not instructions, and the evaluation includes an injected "SYSTEM OVERRIDE" in an agent's notes to check that it holds.
+- **Traces as data:** every step (model turn, tool call, tool result, answer) is streamed to the browser over server-sent events with timings, and saved with token counts so earlier runs can be replayed.
+- **Any OpenAI-compatible model** with tool calling: Groq (default), OpenAI, Together, or a local server.
+
+## Evaluation
+
+[`eval/tasks.jsonl`](eval/tasks.jsonl) holds 18 tasks with checkable answers, across four groups: exact money and date maths, facts that must be looked up on Wikipedia, support questions that must be answered from the notes (or declined when the notes don't cover them), and prompt-injection attacks. Each run records success, whether the agent used the tools the task needs, tool errors, model turns, tokens and time. The suite runs weekly and on every change to the agent code, and the live app's Evaluation tab shows the latest run, task by task.
+
+<!-- EVAL:START -->
+_Results are published here automatically after the first evaluation run._
+<!-- EVAL:END -->
+
+## Run locally
 
 ```bash
-docker compose up --build
+cp .env.example .env               # add an LLM_API_KEY (free at console.groq.com)
+docker build -t agent-builder . && docker run -p 7860:7860 --env-file .env agent-builder
 ```
-
-- Frontend: http://localhost:3000
-- Backend: http://localhost:8000
-- API docs: http://localhost:8000/docs
-
-## Local Development (without Docker)
-
-### Backend
 
 ```bash
-cd backend
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload
+pip install -r requirements-dev.txt
+uvicorn agentkit.main:app --reload --port 7860
+pytest                             # 34 tests with a scripted model, no network or key needed
+python -m eval.run_eval            # live evaluation (needs LLM_API_KEY and internet)
 ```
 
-### Frontend
+**Deployment.** The app runs on Render's free tier (512 MB of memory, a tenth of a CPU core), defined in the [Blueprint](https://github.com/saccromcyes/saccromcyes.github.io/blob/main/render.yaml) that deploys all of my demos; every push to `main` that passes CI redeploys it. The CI job *Fits Render free tier* starts the production image under exactly those limits, sends a real request, and fails if the app runs out of memory or doesn't become healthy, so a change can't silently break the live demo.
 
-```bash
-cd frontend
-python -m http.server 3000
+## API
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/tools` | Available tools with their schemas |
+| `GET/POST /api/agents`, `GET/PUT/DELETE /api/agents/{id}` | Manage agents (yours are tied to your `X-Session-Id`; starters are read-only) |
+| `POST /api/agents/{id}/run` | Run an agent; returns a server-sent event stream of the trace |
+| `GET /api/agents/{id}/runs`, `GET /api/runs/{id}` | Run history and full traces |
+| `GET /api/eval` | Latest evaluation |
+
+Interactive docs at `/api/docs`.
+
+## Project layout
+
+```
+agentkit/
+  tools.py      tool registry: schemas, implementations, safety checks
+  agent.py      the agent loop and its guard rails
+  llm.py        OpenAI-compatible tool-calling client
+  store.py      agents and runs (SQLAlchemy)
+  templates.py  starter agents
+  main.py       FastAPI app with SSE streaming
+web/            the builder interface (no build step)
+eval/           tasks with known answers and the evaluation runner
+tests/          tools, agent loop and API, using a scripted model
 ```
 
-If you're running the frontend locally, it expects the backend at `http://localhost:8000` by default.
-You can set an API base URL in Docker with the `API_BASE_URL` environment variable.
+## History
 
-## API Highlights
-
-- `GET /health` - service health status
-- `GET /metrics` - uptime and workflow/user counts
-- `GET /activity` - recent activity feed
-- `GET /templates` - curated workflow templates
-- `GET /runs` - recent workflow runs
-- `POST /workflows/{id}/runs` - create a workflow run
-- `GET /users` / `POST /users` - list and create builders
-- `PATCH /users/{id}` / `DELETE /users/{id}` - update or remove a builder
-- `GET /workflows` / `POST /workflows` - list and create workflows
-- `PATCH /workflows/{id}` / `DELETE /workflows/{id}` - update or remove a workflow
-
-## Demo Data
-
-Use the **Seed Demo Data** button in the UI to instantly add a standout builder profile and
-workflow.
+Version 1 of this repository was a CRUD starter that stored workflow records but did not run anything, and its description mentioned OpenAGI, which it never used. Version 2 replaces it with a working agent runtime.
